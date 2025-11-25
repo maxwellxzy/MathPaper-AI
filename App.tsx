@@ -56,48 +56,65 @@ export default function App() {
       setTasks(prev => prev.map(t => t.id === taskId ? { ...t, ...updates } : t));
     };
 
-    // Get current task details to ensure we have fileName
+    // Get current task details
     const currentTask = tasks.find(t => t.id === taskId);
     if (!currentTask) return;
 
     try {
-      updateTask({ status: TaskStatus.PROCESSING, currentStep: ProcessingStep.SPLITTING, progress: 10 });
+      updateTask({ status: TaskStatus.PROCESSING, currentStep: ProcessingStep.SPLITTING, progress: 5 });
       
-      // 1. Split
-      const imageUrls = await MockApi.splitPaper(taskId);
-      updateTask({ currentStep: ProcessingStep.OCR, progress: 25 });
+      // 1. Split - Now returns sessionId
+      const { sessionId, imageUrls } = await MockApi.splitPaper(taskId);
+      
+      // Store sessionId and update progress
+      updateTask({ 
+        sessionId, 
+        currentStep: ProcessingStep.OCR, 
+        progress: 15 
+      });
 
-      // 2. Process each split image (OCR -> Analyze)
+      // 2. Process each split image (OCR -> Analyze -> SAVE Incremental)
       const questions: Question[] = [];
-      const totalSteps = imageUrls.length * 2; // OCR + Analysis for each
+      const totalSteps = imageUrls.length * 3; // OCR + Analysis + Save for each
       let stepsCompleted = 0;
 
       for (let i = 0; i < imageUrls.length; i++) {
-        // OCR
+        // --- OCR ---
+        updateTask({ currentStep: ProcessingStep.OCR });
         const markdown = await MockApi.ocrImage(imageUrls[i], i);
+        
         stepsCompleted++;
-        updateTask({ progress: 25 + Math.floor((stepsCompleted / totalSteps) * 60) });
+        updateTask({ progress: 15 + Math.floor((stepsCompleted / totalSteps) * 80) });
 
-        // Analysis
+        // --- Analysis ---
         updateTask({ currentStep: ProcessingStep.ANALYZING });
         const analysis = await MockApi.analyzeQuestion(markdown, i);
+        
         stepsCompleted++;
-        updateTask({ progress: 25 + Math.floor((stepsCompleted / totalSteps) * 60) });
+        updateTask({ progress: 15 + Math.floor((stepsCompleted / totalSteps) * 80) });
 
-        questions.push({
+        const newQuestion: Question = {
           id: `${taskId}-q-${i}`,
           imageUrl: imageUrls[i],
           markdown,
           analysis,
-        });
+        };
 
-        // Live update of questions as they come in
+        // --- Incremental Save ---
+        // Save THIS specific question to backend immediately
+        updateTask({ currentStep: ProcessingStep.SAVING }); // Transient state
+        await MockApi.saveQuestionResult(sessionId, newQuestion);
+
+        stepsCompleted++;
+        updateTask({ progress: 15 + Math.floor((stepsCompleted / totalSteps) * 80) });
+
+        // Add to local state for display ONLY after it's been processed and saved
+        questions.push(newQuestion);
         setTasks(prev => prev.map(t => t.id === taskId ? { ...t, questions: [...questions] } : t));
       }
 
-      // 3. Save Results Automatically
-      updateTask({ currentStep: ProcessingStep.SAVING, progress: 95 });
-      await MockApi.savePaperResults(currentTask.fileName, questions);
+      // 3. Finalize
+      await MockApi.finishPaperSession(sessionId);
 
       // Finish Pipeline
       updateTask({ 
