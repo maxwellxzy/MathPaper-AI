@@ -1,0 +1,5 @@
+{
+  "name": "MathPaper AI - 高中数学试卷智能分析",
+  "description": "智能高中数学试卷分析系统。支持整卷上传、自动切割、OCR识别及AI知识点解析。提供人工校对功能，助力教学资源数字化。",
+  "requestFramePermissions": []
+}
