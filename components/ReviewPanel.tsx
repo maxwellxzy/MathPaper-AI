@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { PaperTask, TaskStatus, ProcessingStep } from '../types';
-import { CheckCircle2, Loader2 } from 'lucide-react';
+import { CheckCircle2, Loader2, Lightbulb, PenTool } from 'lucide-react';
 
 interface ReviewPanelProps {
   task: PaperTask;
@@ -79,10 +79,12 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ task }) => {
             {/* Right: Analysis Result (Read Only) */}
             <div className="lg:w-7/12 p-6 flex flex-col relative">
               <div className="mb-6">
-                <h3 className="text-sm font-bold text-indigo-600 mb-2 uppercase tracking-wide">涉及知识点</h3>
+                <h3 className="text-sm font-bold text-indigo-600 mb-3 uppercase tracking-wide flex items-center gap-1">
+                  <Lightbulb className="w-4 h-4" /> 涉及知识点
+                </h3>
                 <div className="flex flex-wrap gap-2">
                   {q.analysis.knowledgePoints.map((kp, i) => (
-                    <span key={i} className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded text-sm border border-indigo-100 font-medium">
+                    <span key={i} className="px-2.5 py-1 bg-indigo-50 text-indigo-700 rounded-md text-sm border border-indigo-100 font-medium">
                       {kp}
                     </span>
                   ))}
@@ -90,11 +92,21 @@ export const ReviewPanel: React.FC<ReviewPanelProps> = ({ task }) => {
               </div>
 
               <div className="flex-1">
-                <h3 className="text-sm font-bold text-teal-600 mb-2 uppercase tracking-wide">解题思路与方法</h3>
-                <div className="prose prose-slate prose-sm max-w-none bg-slate-50 p-4 rounded-lg border border-slate-100">
-                  <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
-                    {q.analysis.solutionMethod}
-                  </ReactMarkdown>
+                <h3 className="text-sm font-bold text-teal-600 mb-3 uppercase tracking-wide flex items-center gap-1">
+                  <PenTool className="w-4 h-4" /> 解题思路与方法
+                </h3>
+                <div className="bg-slate-50 p-5 rounded-lg border border-slate-100">
+                  <ol className="list-decimal pl-5 space-y-3 marker:text-teal-600 marker:font-semibold">
+                    {q.analysis.solutionMethod.map((step, idx) => (
+                      <li key={idx} className="text-slate-700 text-sm leading-relaxed">
+                        <div className="prose prose-sm max-w-none">
+                          <ReactMarkdown remarkPlugins={[remarkMath]} rehypePlugins={[rehypeKatex]}>
+                            {step}
+                          </ReactMarkdown>
+                        </div>
+                      </li>
+                    ))}
+                  </ol>
                 </div>
               </div>
             </div>

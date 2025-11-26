@@ -1,3 +1,4 @@
+
 # MathPaper AI 接口文档
 
 本文档描述了高中数学试卷智能分析系统的后端接口规范。
@@ -97,7 +98,11 @@
   "code": 200,
   "data": {
     "knowledgePoints": ["集合运算", "一元二次不等式"],
-    "solutionMethod": "1. 解不等式 $x^2 - 2x - 3 < 0$ ...\n2. 得出解集 (-1, 3)。"
+    "solutionMethod": [
+      "1. 解不等式 $x^2 - 2x - 3 < 0$, 即 $(x-3)(x+1) < 0$",
+      "2. 解得 $-1 < x < 3$",
+      "故集合 A 为 (-1, 3)"
+    ]
   }
 }
 ```
@@ -106,9 +111,9 @@
 
 ### 4. 保存单题结果 (Save Question)
 
-将前端处理完成的单道题目结果实时保存到当前会话中。
+将前端处理完成的单道题目结果实时保存。URL中不包含SessionId，SessionId包含在请求体中。
 
-- **URL**: `/api/v1/session/{sessionId}/question`
+- **URL**: `/api/v1/question/save`
 - **Method**: `POST`
 - **Content-Type**: `application/json`
 
@@ -116,12 +121,17 @@
 
 ```json
 {
-  "id": "task-1-q-0",
-  "imageUrl": "https://storage.example.com/split/sess_k92j3n5m/1.jpg",
+  "sessionId": "sess_k92j3n5m",
+  "index": 1,
+  "fileName": "2023_math_mock_1.jpg",
   "markdown": "题目文本...",
+  "imageUrl": "https://storage.example.com/split/sess_k92j3n5m/1.jpg",
   "analysis": {
     "knowledgePoints": ["集合运算"],
-    "solutionMethod": "解题步骤..."
+    "solutionMethod": [
+       "第一步...",
+       "第二步..."
+    ]
   }
 }
 ```
@@ -172,4 +182,4 @@
 | 字段 | 类型 | 描述 |
 | :--- | :--- | :--- |
 | `knowledgePoints` | `string[]` | 题目涉及的知识点列表 |
-| `solutionMethod` | `string` | Markdown 格式的详细解题步骤 |
+| `solutionMethod` | `string[]` | 解题步骤列表，数组中的每一项代表一个步骤 |

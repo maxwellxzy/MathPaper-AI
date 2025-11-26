@@ -57,8 +57,12 @@ export default function App() {
     };
 
     // Get current task details
-    const currentTask = tasks.find(t => t.id === taskId);
-    if (!currentTask) return;
+    // Note: We need to get the latest state inside the async function, but for fileName we can grab it once
+    // A better way is to rely on the functional update or grab from state, 
+    // but since we are inside a closure, let's grab the initial reference for immutable props
+    const initialTaskState = tasks.find(t => t.id === taskId);
+    if (!initialTaskState) return;
+    const fileName = initialTaskState.fileName;
 
     try {
       updateTask({ status: TaskStatus.PROCESSING, currentStep: ProcessingStep.SPLITTING, progress: 5 });
@@ -103,7 +107,13 @@ export default function App() {
         // --- Incremental Save ---
         // Save THIS specific question to backend immediately
         updateTask({ currentStep: ProcessingStep.SAVING }); // Transient state
-        await MockApi.saveQuestionResult(sessionId, newQuestion);
+        
+        await MockApi.saveQuestionResult({
+            sessionId,
+            index: i + 1, // 1-based index usually
+            fileName,
+            question: newQuestion
+        });
 
         stepsCompleted++;
         updateTask({ progress: 15 + Math.floor((stepsCompleted / totalSteps) * 80) });
@@ -133,7 +143,7 @@ export default function App() {
     const files = e.target.files;
     if (!files) return;
 
-    if (tasks.length + files.length > MAX_TASKS) {
+    if (tasks.length + Array.from(files).length > MAX_TASKS) {
       alert(`最多只能添加 ${MAX_TASKS} 个任务`);
       return;
     }

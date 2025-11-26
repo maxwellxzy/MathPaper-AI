@@ -39,12 +39,24 @@ export const MockApi = {
   },
 
   // 4. 单题实时存储 (API) - Incremental Save
-  saveQuestionResult: async (sessionId: string, question: Question) => {
-    console.log(`[API] Saving single question to Session [${sessionId}]`, {
-      questionId: question.id,
-      analysis: question.analysis
+  // 按照要求：URL不含sessionId，参数包含sessionId, index, fileName等
+  saveQuestionResult: async (payload: { 
+    sessionId: string, 
+    index: number, 
+    fileName: string,
+    question: Question 
+  }) => {
+    console.log(`[API] POST /api/v1/question/save`);
+    console.log(`[API] Body:`, {
+        sessionId: payload.sessionId,
+        index: payload.index,
+        fileName: payload.fileName,
+        markdown: payload.question.markdown,
+        imageUrl: payload.question.imageUrl,
+        analysis: payload.question.analysis
     });
-    await delay(400); // 模拟网络存储耗时 (较短)
+    
+    await delay(400); // 模拟网络存储耗时
     return { success: true };
   },
 

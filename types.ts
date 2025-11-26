@@ -17,7 +17,7 @@ export enum ProcessingStep {
 
 export interface AnalysisResult {
   knowledgePoints: string[];
-  solutionMethod: string;
+  solutionMethod: string[]; // Changed from string to string[]
 }
 
 export interface Question {
